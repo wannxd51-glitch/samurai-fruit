@@ -3,74 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Samurai Fruit</title>
 
 <style>
-
 *{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial;
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
 body{
-overflow:hidden;
-background:#111;
+    overflow:hidden;
+    background:linear-gradient(#6fd3ff,#ffffff);
+    font-family:Arial;
 }
 
 canvas{
-display:block;
-background:url("assets/background.jpg") center/cover no-repeat;
+    display:block;
 }
 
-#hud{
-position:absolute;
-top:15px;
-left:15px;
-color:white;
-font-size:22px;
-font-weight:bold;
-text-shadow:2px 2px 5px black;
+#ui{
+    position:absolute;
+    top:10px;
+    left:10px;
+    color:white;
+    font-size:28px;
+    font-weight:bold;
+    text-shadow:2px 2px 5px black;
 }
-
-#logo{
-position:absolute;
-top:10px;
-width:100%;
-text-align:center;
-font-size:40px;
-font-weight:bold;
-color:white;
-text-shadow:0 0 20px red;
-}
-
 </style>
-
 </head>
 
 <body>
 
-<div id="logo">
-⚔️ SAMURAI FRUIT ⚔️
-</div>
-
-<div id="hud">
-
-Score :
-<span id="score">0</span>
-
-<br>
-
-Level :
-<span id="level">1</span>
-
-<br>
-
-Life :
-<span id="life">3</span>
-
+<div id="ui">
+Skor : <span id="score">0</span><br>
+Nyawa : <span id="life">3</span><br>
+Level : <span id="level">1</span>
 </div>
 
 <canvas id="game"></canvas>
@@ -80,79 +49,63 @@ Life :
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 
-canvas.width=innerWidth;
-canvas.height=innerHeight;
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 
 let score=0;
-let level=1;
 let life=3;
-
-let slash=[];
-
-const apple=new Image();
-apple.src="assets/apple.png";
-
-const orange=new Image();
-orange.src="assets/orange.png";
-
-const watermelon=new Image();
-watermelon.src="assets/watermelon.png";
-
-const bomb=new Image();
-bomb.src="assets/bomb.png";
-
-const fruitImage=[apple,orange,watermelon];
+let level=1;
 
 const fruits=[];
+
+const fruitList=[
+{emoji:"🍎",score:10},
+{emoji:"🍊",score:15},
+{emoji:"🍉",score:20},
+{emoji:"🍌",score:15},
+{emoji:"🍇",score:25},
+{emoji:"🍓",score:30},
+{emoji:"🍍",score:35},
+{emoji:"🥝",score:40},
+{emoji:"💣",score:-1}
+];
 
 class Fruit{
 
 constructor(){
 
-this.image=Math.random()<0.15?bomb:
-fruitImage[Math.floor(Math.random()*fruitImage.length)];
+let pilih=fruitList[Math.floor(Math.random()*fruitList.length)];
+
+this.emoji=pilih.emoji;
+this.value=pilih.score;
 
 this.x=Math.random()*canvas.width;
+this.y=canvas.height+50;
 
-this.y=canvas.height+80;
+this.vx=Math.random()*8-4;
+this.vy=-(10+Math.random()*5);
 
-this.size=80;
+this.gravity=0.18;
 
-this.vx=(Math.random()-0.5)*4;
-
-this.vy=-(10+Math.random()*4+level);
-
-this.gravity=.20;
-
-this.rotate=Math.random()*360;
-
-this.spin=(Math.random()-0.5)*4;
+this.size=50;
 
 }
 
 draw(){
 
-ctx.save();
-
-ctx.translate(this.x,this.y);
-
-ctx.rotate(this.rotate*Math.PI/180);
-
-ctx.drawImage(this.image,-40,-40,this.size,this.size);
-
-ctx.restore();
+ctx.font=this.size+"px serif";
+ctx.fillText(this.emoji,this.x,this.y);
 
 }
 
 update(){
 
 this.x+=this.vx;
-
 this.y+=this.vy;
 
 this.vy+=this.gravity;
 
-this.rotate+=this.spin;
+this.draw();
 
 }
 
@@ -164,103 +117,51 @@ fruits.push(new Fruit());
 
 }
 
-setInterval(spawn,900);
+setInterval(spawn,800);
 
-function loop(){
+let mouse={x:0,y:0};
 
-ctx.clearRect(0,0,canvas.width,canvas.height);
+canvas.addEventListener("mousemove",slash);
+canvas.addEventListener("touchmove",(e)=>{
+slash(e.touches[0]);
+});
 
-for(let i=fruits.length-1;i>=0;i--){
+function slash(e){
 
-let f=fruits[i];
+mouse.x=e.clientX;
+mouse.y=e.clientY;
 
-f.update();
-
-f.draw();
-
-if(f.y>canvas.height+100){
-
-if(f.image!==bomb){
-
-life--;
-
-}
-
-fruits.splice(i,1);
-
-}
-
-}
-
-ctx.strokeStyle="rgba(255,255,255,.7)";
-ctx.lineWidth=8;
 ctx.beginPath();
-
-for(let p of slash){
-
-ctx.lineTo(p.x,p.y);
-
-}
-
+ctx.strokeStyle="white";
+ctx.lineWidth=5;
+ctx.moveTo(mouse.x-30,mouse.y-30);
+ctx.lineTo(mouse.x+30,mouse.y+30);
 ctx.stroke();
 
-if(slash.length>15){
-
-slash.shift();
-
-}
-
-document.getElementById("score").innerHTML=score;
-
-document.getElementById("life").innerHTML=life;
-
-document.getElementById("level").innerHTML=level;
-
-if(score>0 && score%10==0){
-
-level=1+Math.floor(score/10);
-
-}
-
-if(life<=0){
-
-alert("GAME OVER\nScore : "+score);
-
-location.reload();
-
-}
-
-requestAnimationFrame(loop);
-
-}
-
-loop();
-
-function hit(x,y){
-
-slash.push({x,y});
-
 for(let i=fruits.length-1;i>=0;i--){
 
 let f=fruits[i];
 
-let dx=x-f.x;
+let dx=f.x-mouse.x;
+let dy=f.y-mouse.y;
 
-let dy=y-f.y;
+let jarak=Math.sqrt(dx*dx+dy*dy);
 
-let d=Math.sqrt(dx*dx+dy*dy);
+if(jarak<35){
 
-if(d<40){
-
-if(f.image===bomb){
+if(f.emoji=="💣"){
 
 life--;
 
 }else{
 
-score++;
+score+=f.value;
 
-createParticles(f.x,f.y);
+if(score>level*150){
+
+level++;
+
+}
 
 }
 
@@ -272,80 +173,52 @@ fruits.splice(i,1);
 
 }
 
-canvas.onmousemove=e=>{
+function game(){
 
-if(e.buttons){
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
-hit(e.clientX,e.clientY);
+for(let i=fruits.length-1;i>=0;i--){
+
+fruits[i].update();
+
+if(fruits[i].y>canvas.height+60){
+
+if(fruits[i].emoji!="💣"){
+
+life--;
+
+}
+
+fruits.splice(i,1);
 
 }
 
 }
 
-canvas.ontouchmove=e=>{
+document.getElementById("score").innerHTML=score;
+document.getElementById("life").innerHTML=life;
+document.getElementById("level").innerHTML=level;
 
-let t=e.touches[0];
-
-hit(t.clientX,t.clientY);
-
-}
-
-const particles=[];
-
-function createParticles(x,y){
-
-for(let i=0;i<25;i++){
-
-particles.push({
-
-x:x,
-
-y:y,
-
-vx:(Math.random()-.5)*8,
-
-vy:(Math.random()-.5)*8,
-
-life:40
-
-});
-
-}
-
-}
-
-setInterval(()=>{
-
-for(let i=particles.length-1;i>=0;i--){
-
-let p=particles[i];
+if(life<=0){
 
 ctx.fillStyle="red";
+ctx.font="70px Arial";
+ctx.fillText("GAME OVER",canvas.width/2-220,canvas.height/2);
 
-ctx.beginPath();
+ctx.font="40px Arial";
+ctx.fillText("Skor : "+score,canvas.width/2-80,canvas.height/2+60);
 
-ctx.arc(p.x,p.y,3,0,6.28);
-
-ctx.fill();
-
-p.x+=p.vx;
-
-p.y+=p.vy;
-
-p.life--;
-
-if(p.life<0){
-
-particles.splice(i,1);
+return;
 
 }
 
+requestAnimationFrame(game);
+
 }
 
-},16);
+game();
 
 </script>
 
 </body>
-
 </html>
