@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WAN Samurai Fruit</title>
+<title>WAN Samurai Buah</title>
 
 <style>
 *{
@@ -14,34 +14,39 @@
 
 body{
     overflow:hidden;
-    background:linear-gradient(#69c6ff,#7bd86b);
     font-family:Arial,sans-serif;
+    background:linear-gradient(#6ec6ff,#8bc34a);
 }
 
 canvas{
     display:block;
 }
 
-/* Logo kanan atas */
-#logo{
+/* ===== 5 Logo di kanan atas ===== */
+#logoBar{
     position:absolute;
-    top:15px;
-    right:15px;
-    width:60px;
-    height:60px;
-    border-radius:15%;
-    border:3px solid white;
-    box-shadow:0 0 15px black;
+    top:10px;
+    right:10px;
+    display:flex;
+    gap:8px;
     z-index:100;
-    background:white;
-    object-fit:cover;
 }
 
-/* Skor */
+#logoBar img{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    border:2px solid white;
+    background:white;
+    object-fit:cover;
+    box-shadow:0 0 10px rgba(0,0,0,.5);
+}
+
+/* ===== Skor ===== */
 #score{
     position:absolute;
-    top:20px;
-    left:20px;
+    top:15px;
+    left:15px;
     color:white;
     font-size:32px;
     font-weight:bold;
@@ -53,34 +58,35 @@ canvas{
 <body>
 
 <div id="score">Score : 0</div>
-<div id="topBar">
 
-    <img src=" IMG-20260728-WA0041.jpg"class="logo">
-    <img src="IMG-20260728-WA0042.jpg" class="logo">
-    <img src="IMG-20260728-WA0043.jpg" class="logo">
-    <img src="IMG-20260728-WA0044.jpg" class="logo">
-    <img src="logo5.png" class="logo">
-
+<div id="logoBar">
+    <img src="wan.png" alt="WAN">
+    <img src="rpl.jpg" alt="RPL">
+    <img src="moko.jpg" alt="MOKO">
+    <img src="school.jpg" alt="School">
+    <img src="samurai.png" alt="Samurai">
 </div>
 
 <canvas id="game"></canvas>
 
-
 <script>
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
 function resize(){
-    canvas.width=window.innerWidth;
-    canvas.height=window.innerHeight;
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
 }
 resize();
-window.addEventListener("resize",resize);
+addEventListener("resize",resize);
 
 let score=0;
+let gameOver=false;
 let fruits=[];
 
-const emojis=["🍎","🍉","🍌","🍍","🍓","🥝","🍊",""];
+const objek=[
+"🍎","🍉","🍌","🍍","🍓","🥝","🍊","🥭","🍇"
+];
 
 function Fruit(){
 
@@ -88,49 +94,85 @@ function Fruit(){
     this.y=canvas.height+50;
 
     this.vx=(Math.random()-0.5)*8;
-    this.vy=-18-Math.random()*5;
+    this.vy=-18-Math.random()*6;
 
-    this.size=50;
+    this.size=55;
 
-    this.emoji=emojis[Math.floor(Math.random()*emojis.length)];
+    if(Math.random()<0.15){
+        this.emoji="💣";
+    }else{
+        this.emoji=objek[Math.floor(Math.random()*objek.length)];
+    }
 
 }
 
 function spawnFruit(){
-    fruits.push(new Fruit());
+
+    if(!gameOver)
+        fruits.push(new Fruit());
+
 }
 
-setInterval(spawnFruit,800);
+setInterval(spawnFruit,700);
 
-canvas.addEventListener("mousemove",cutFruit);
-canvas.addEventListener("touchmove",function(e){
-    cutFruit(e.touches[0]);
-});
+function slash(e){
 
-function cutFruit(e){
+    if(gameOver) return;
+
+    let x=e.clientX;
+    let y=e.clientY;
 
     for(let i=fruits.length-1;i>=0;i--){
 
         let f=fruits[i];
 
-        let dx=e.clientX-f.x;
-        let dy=e.clientY-f.y;
+        let dx=x-f.x;
+        let dy=y-f.y;
 
-        if(Math.sqrt(dx*dx+dy*dy)<40){
+        if(Math.sqrt(dx*dx+dy*dy)<45){
+
+            if(f.emoji=="💣"){
+
+                gameOver=true;
+
+                setTimeout(()=>{
+
+                    alert("💣 BOOM!\nGame Over\nScore : "+score);
+
+                    score=0;
+                    fruits=[];
+                    gameOver=false;
+
+                    document.getElementById("score").innerHTML="Score : 0";
+
+                },100);
+
+                return;
+            }
 
             fruits.splice(i,1);
+
             score++;
+
             document.getElementById("score").innerHTML="Score : "+score;
 
         }
+
     }
+
 }
 
-function game(){
+canvas.addEventListener("mousemove",slash);
+
+canvas.addEventListener("touchmove",function(e){
+    slash(e.touches[0]);
+});
+
+function draw(){
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    ctx.font="50px Arial";
+    ctx.font="55px Arial";
 
     for(let i=fruits.length-1;i>=0;i--){
 
@@ -142,17 +184,19 @@ function game(){
 
         ctx.fillText(f.emoji,f.x,f.y);
 
-        if(f.y>canvas.height+100){
+        if(f.y>canvas.height+80){
+
             fruits.splice(i,1);
+
         }
 
     }
 
-    requestAnimationFrame(game);
+    requestAnimationFrame(draw);
+
 }
 
-game();
-
+draw();
 </script>
 
 </body>
